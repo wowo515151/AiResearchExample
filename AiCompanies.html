@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AiCompanies — 100 Pureplay AI Startups Investor Metrics</title>
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.3.0/dist/ag-grid-community.min.js"></script>
+    <!-- Preloaded CSV data to bypass CORS browser security when double-clicked locally -->
+    <script src="AiCompaniesGridData.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.3.0/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.3.0/styles/ag-theme-alpine.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            min-height: 100vh;
+        }
+        header {
+            border-bottom: 1px solid #2a2d3e;
+            padding: 24px 32px;
+        }
+        header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        header h1 span { color: #6c8cff; }
+        .description {
+            max-width: 900px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        .badges {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .badge {
+            border: 1px solid #3a3d52;
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 0.82rem;
+        }
+        .badge strong { color: #6c8cff; }
+        #spreadsheet-container {
+            height: calc(100vh - 200px);
+            width: 100%;
+            padding: 16px;
+        }
+        .status-bar {
+            padding: 8px 32px;
+            font-size: 0.78rem;
+            border-top: 1px solid #1e2136;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.82rem;
+            border-top: 1px solid #1e2136;
+        }
+        footer a {
+            text-decoration: none;
+        }
+        footer a:hover { text-decoration: underline; }
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            font-size: 1rem;
+        }
+        .loading .spinner {
+            width: 32px; height: 32px;
+            border: 3px solid #2a2d3e;
+            border-top-color: #6c8cff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Fallback Upload UI */
+        .upload-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #3a3d52;
+            border-radius: 12px;
+            background: #161824;
+            padding: 40px;
+            text-align: center;
+            max-width: 550px;
+            margin: 60px auto;
+            transition: all 0.3s ease;
+        }
+        .upload-zone.dragover {
+            box-shadow: 0 0 20px rgba(108, 140, 255, 0.15);
+        }
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+        .upload-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .upload-text {
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .upload-text strong {
+            color: #ffffff;
+        }
+        .upload-btn {
+            background: #6c8cff;
+
+            border: none;
+            border-radius: 6px;
+            padding: 10px 24px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        .upload-btn:hover {
+            background: #5573e6;
+        }
+        .error-message {
+            font-size: 0.8rem;
+            margin-top: 16px;
+            line-height: 1.4;
+            padding: 10px 16px;
+            border-radius: 6px;
+            border: 1px solid rgba(224, 96, 96, 0.2);
+            width: 100%;
+            text-align: left;
+        }
+
+        /* Fix ag-Grid wrapped text line-height and excessive vertical spacing */
+        .ag-theme-alpine .ag-cell {
+            line-height: 1.5 !important;
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>AiCompanies — Investor Metrics Spreadsheet</h1>
+    <p class="description">
+        This spreadsheet contains investor-relevant metrics for <strong>100 pureplay AI startups</strong>. 
+        Each company has been evaluated across <strong>50 key investor metrics</strong> covering financials, 
+        growth, product-market fit, technical moats, and risk indicators. Data was researched and compiled 
+        by the <strong>Von AI</strong> autonomous research system. Many cells will show <code>NULL</code> — 
+        this is expected, as not all metrics are publicly available for every company.
+    </p>
+    <div class="badges">
+        <div class="badge">100 AI Startups</div>
+        <div class="badge">50 Investor Metrics</div>
+        <div class="badge">Von AI Research</div>
+        <div class="badge">CSV-Backed Spreadsheet</div>
+    </div>
+</header>
+
+<div id="spreadsheet-container">
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        Loading 100 companies × 50 metrics grid…
+    </div>
+    <div id="myGrid" class="ag-theme-alpine" style="height:100%;width:100%;display:none;"></div>
+</div>
+
+<div class="status-bar">
+    Scroll horizontally to view all 50 metrics &bull; Use column filters to narrow by metric
+</div>
+
+<footer>
+    Research and development performed by <strong>Von AI</strong> — an autonomous research and development system.
+    &bull; Developer: <a href="https://linkedin.com/in/warren-harding-29a0a673" target="_blank" rel="noopener">Warren Harding on LinkedIn</a>
+</footer>
+
+<script>
+    // Parse CSV text into array of objects
+    function parseCSV(text) {
+        const lines = text.split('\n').filter(l => l.trim() !== '');
+        if (lines.length < 2) return [];
+        // Parse header — handle quoted fields
+        const headers = parseCSVLine(lines[0]);
+        const rows = [];
+        for (let i = 1; i < lines.length; i++) {
+            const values = parseCSVLine(lines[i]);
+            const obj = {};
+            headers.forEach((h, idx) => {
+                obj[h.trim()] = (values[idx] !== undefined ? values[idx].trim() : 'NULL');
+            });
+            rows.push(obj);
+        }
+        return rows;
+    }
+
+    function parseCSVLine(line) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (inQuotes) {
+                if (ch === '"' && line[i + 1] === '"') {
+                    current += '"';
+                    i++;
+                } else if (ch === '"') {
+                    inQuotes = false;
+                } else {
+                    current += ch;
+                }
+            } else {
+                if (ch === '"') {
+                    inQuotes = true;
+                } else if (ch === ',') {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += ch;
+                }
+            }
+        }
+        result.push(current);
+        return result;
+    }
+
+    function setupGrid(data) {
+        if (!data || data.length === 0) {
+            throw new Error("No data found or parsed from the CSV file.");
+        }
+        // Build column definitions from header keys
+        const allKeys = Object.keys(data[0]);
+        const colDefs = allKeys.map((key, idx) => ({
+            field: key,
+            headerName: key,
+            flex: key === 'Company' ? 1.5 : 2,
+            minWidth: key === 'Company' ? 140 : 150,
+            sortable: false,
+            filter: 'agTextColumnFilter',
+            resizable: true,
+            cellStyle: function(params) {
+                if (params.value === 'NULL' || params.value === '' || params.value === undefined) {
+                    return { color: '#3a3d52' };
+                }
+                return {};
+            }
+        }));
+
+        const gridOptions = {
+            columnDefs: colDefs,
+            rowData: data,
+            defaultColDef: {
+                flex: 2,
+                minWidth: 150,
+                sortable: false,
+                filter: true,
+                resizable: true,
+                wrapText: true,
+                autoHeight: true
+            },
+            enableRtl: false,
+            rowHeight: 40,
+            headerHeight: 32,
+            animateRows: false,
+            suppressRowClickSelection: true,
+            pagination: true,
+            paginationPageSize: 50,
+            paginationPageSizeSelector: [25, 50, 100],
+            domLayout: 'normal',
+            rowSelection: 'single',
+            enableCellTextSelection: true,
+            suppressClipboardEvents: false
+        };
+
+        const gridDiv = document.getElementById('myGrid');
+        gridDiv.style.display = 'block';
+        document.getElementById('loading').style.display = 'none';
+        new agGrid.Grid(gridDiv, gridOptions);
+    }
+
+    function showFallbackUI(errorMsg) {
+        const isLocalFile = window.location.protocol === 'file:';
+        let helperText = '';
+        if (isLocalFile) {
+            helperText = 'Modern browsers block loading local files directly via <code>fetch()</code> when opening HTML files via <code>file://</code> due to security policies (CORS).';
+        } else {
+            helperText = 'The CSV file could not be loaded automatically from the server.';
+        }
+
+        const loadingDiv = document.getElementById('loading');
+        loadingDiv.className = ''; // Reset layout
+        loadingDiv.innerHTML = `
+            <div class="upload-zone" id="upload-zone">
+                <div class="upload-icon">📂</div>
+                <div class="upload-title">Load AiCompaniesGrid.csv</div>
+                <p class="upload-text">
+                    ${helperText}<br><br>
+                    Please select or drag-and-drop <strong>AiCompaniesGrid.csv</strong> from this folder to load the spreadsheet.
+                </p>
+                <input type="file" id="file-input" accept=".csv" style="display: none;" />
+                <button class="upload-btn" onclick="document.getElementById('file-input').click()">Choose CSV File</button>
+                <div class="error-message">
+                    <strong>Auto-load failed:</strong> ${errorMsg}
+                </div>
+            </div>
+        `;
+
+        const zone = document.getElementById('upload-zone');
+        const fileInput = document.getElementById('file-input');
+
+        zone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            zone.classList.add('dragover');
+        });
+
+        zone.addEventListener('dragleave', () => {
+            zone.classList.remove('dragover');
+        });
+
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+    }
+
+    function handleFile(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const text = e.target.result;
+                const data = parseCSV(text);
+                setupGrid(data);
+            } catch (err) {
+                alert("Failed to parse the CSV file: " + err.message);
+            }
+        };
+        reader.onerror = function() {
+            alert("Error reading file.");
+        };
+        reader.readAsText(file);
+    }
+
+    async function init() {
+        // If window.CSV_DATA is loaded from AiCompaniesGridData.js, use it automatically!
+        if (window.CSV_DATA) {
+            try {
+                const data = parseCSV(window.CSV_DATA);
+                setupGrid(data);
+                return;
+            } catch (err) {
+                console.error("Failed to parse pre-loaded CSV data:", err);
+            }
+        }
+
+        try {
+            // Try fetching from the same folder
+            const response = await fetch('AiCompaniesGrid.csv');
+            if (!response.ok) throw new Error('HTTP Status ' + response.status);
+            const csvText = await response.text();
+            const data = parseCSV(csvText);
+            setupGrid(data);
+        } catch (err) {
+            console.warn("Auto-load failed:", err);
+            showFallbackUI(err.message);
+        }
+    }
+
+    init();
+</script>
+
+</body>
+</html>
